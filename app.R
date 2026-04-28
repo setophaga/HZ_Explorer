@@ -11,7 +11,7 @@ library(shinycssloaders)
 # ============================================================
 #  CONTINENT CLASSIFIER (7 continents, Hawaii excluded)
 # ============================================================
-continent_from_latlon <- function(lat, lon) {
+continent_from_latlon = function(lat, lon) {
   case_when(
     !is.na(lat) & lat <= -60 ~ "Antarctica",
     
@@ -48,7 +48,7 @@ continent_from_latlon <- function(lat, lon) {
 # ============================================================
 #  JS: LIST CLICK + SCROLL HANDLER
 # ============================================================
-js <- "
+js = "
 $(document).on('click', '.hz-item', function() {
   var ptId = $(this).data('pt-id');
   Shiny.setInputValue('hz_list_click', ptId, {priority: 'event'});
@@ -73,7 +73,7 @@ Shiny.addCustomMessageHandler('scrollToHzItem', function(message) {
 # ============================================================
 #  DATABASE CONNECTION (Local Version)
 # ============================================================
-con <- dbConnect(
+con = dbConnect(
   RPostgres::Postgres(),
   dbname   = Sys.getenv("HZ_DB_NAME"),
   host     = Sys.getenv("HZ_DB_HOST"),
@@ -88,7 +88,7 @@ onStop(function() dbDisconnect(con))
 #  LOAD + CLEAN DATA
 # ============================================================
 # Using your original local table name
-hz <- dbReadTable(con, "hybrid_zone_final") %>%
+hz = dbReadTable(con, "hybrid_zone_final") %>%
   mutate(
     id    = row_number(),
     pt_id = paste0("pt_", id),
@@ -130,32 +130,32 @@ hz <- dbReadTable(con, "hybrid_zone_final") %>%
 # ============================================================
 #  COLOR PALETTE & AUTOCOMPLETE LIST
 # ============================================================
-safe_palette <- c(
+safe_palette = c(
   "#E69F00", "#56B4E9", "#D55E00",
   "#CC79A7", "#F0E442", "#A6761D"
 )
 
 # 1. Get the unique lowercase values
-taxa <- sort(unique(hz$taxon_category_clean))
-taxa <- taxa[taxa != "" & !is.na(taxa) & taxa != "na"]
+taxa = sort(unique(hz$taxon_category_clean))
+taxa = taxa[taxa != "" & !is.na(taxa) & taxa != "na"]
 
 # 2. Create the display names (Title Case)
-taxa_display_names <- tools::toTitleCase(taxa)
+taxa_display_names = tools::toTitleCase(taxa)
 
 # 3. Create a named vector: names = What User Sees, values = What Server Uses
-taxa_choices <- setNames(taxa, taxa_display_names)
+taxa_choices = setNames(taxa, taxa_display_names)
 
 # 4. Keep your palette logic using the lowercase values
-pal_colors <- setNames(safe_palette[seq_along(taxa)], taxa)
-pal <- colorFactor(unname(pal_colors), taxa)
+pal_colors = setNames(safe_palette[seq_along(taxa)], taxa)
+pal = colorFactor(unname(pal_colors), taxa)
 
 # Create a master list of all names (Scientific and Common) for search
-all_species <- sort(unique(c(
+all_species = sort(unique(c(
   hz$species1_name, hz$species2_name, 
   hz$species1_common_name, hz$species2_common_name
 )))
 # Remove NAs or empty strings from the search list
-all_species <- all_species[all_species != "" & !is.na(all_species)]
+all_species = all_species[all_species != "" & !is.na(all_species)]
 
 #SECTION B===========================================================================================================
 ui = fluidPage(
@@ -348,20 +348,20 @@ ui = fluidPage(
   tags$script(HTML(js))
 )
 #SECTION C=========================================================================================================
-server <- function(input, output, session) {
+server = function(input, output, session) {
   
-  format_citations <- function(citation_str, doi_str) {
+  format_citations = function(citation_str, doi_str) {
     # If the citation is NA, empty, or literally "na", return nothing
     if (is.na(citation_str) || !nzchar(citation_str) || citation_str == "na") {
       return(tags$span("")) 
     }
     
-    cites <- str_split(citation_str, fixed("|"))[[1]] %>% str_trim()
-    dois  <- if(!is.na(doi_str)) str_split(doi_str, fixed("|"))[[1]] %>% str_trim() else character(0)
+    cites = str_split(citation_str, fixed("|"))[[1]] %>% str_trim()
+    dois  = if(!is.na(doi_str)) str_split(doi_str, fixed("|"))[[1]] %>% str_trim() else character(0)
     
     tagList(
       lapply(seq_along(cites), function(i) {
-        has_doi <- i <= length(dois) && !is.na(dois[i]) && nzchar(dois[i]) && dois[i] != "na"
+        has_doi = i <= length(dois) && !is.na(dois[i]) && nzchar(dois[i]) && dois[i] != "na"
         
         tagList(
           if (has_doi) {
@@ -375,7 +375,7 @@ server <- function(input, output, session) {
     )
   }
   
-  selected_row <- reactiveVal(NULL)
+  selected_row = reactiveVal(NULL)
   
   observeEvent(input$reset, {
     updateTextInput(session, "species_text", value = "")
@@ -385,13 +385,13 @@ server <- function(input, output, session) {
     selected_row(NULL)
   })
   
-  filtered_data <- reactive({
-    data <- hz
+  filtered_data = reactive({
+    data = hz
     
     # Expanded search logic to include common names
     if (input$species_text != "") {
-      sp <- tolower(str_squish(input$species_text))
-      data <- data %>%
+      sp = tolower(str_squish(input$species_text))
+      data = data %>%
         filter(
           str_detect(species1_clean, fixed(sp)) |
             str_detect(species2_clean, fixed(sp)) |
@@ -402,27 +402,27 @@ server <- function(input, output, session) {
     
     # Taxon Category Filter
     if (input$taxon_filter != "All") {
-      data <- data %>% filter(taxon_category_clean == input$taxon_filter)
+      data = data %>% filter(taxon_category_clean == input$taxon_filter)
     }
     
     # Habitat Filter
     if (input$habitat_filter != "All") {
-      data <- data %>% filter(habitat_type == input$habitat_filter)
+      data = data %>% filter(habitat_type == input$habitat_filter)
     }
     
     # Continent Filter
     if (input$continent_filter == "None / Open Water") {
-      data <- data %>% filter(is.na(continent))
+      data = data %>% filter(is.na(continent))
     } else if (input$continent_filter != "All") {
-      data <- data %>% filter(continent == input$continent_filter)
+      data = data %>% filter(continent == input$continent_filter)
     }
     
     data
   })
   
-  visible_data <- reactive({
-    data <- filtered_data()
-    bounds <- input$map_bounds
+  visible_data = reactive({
+    data = filtered_data()
+    bounds = input$map_bounds
     if (is.null(bounds)) return(data)
     
     data %>%
@@ -434,17 +434,17 @@ server <- function(input, output, session) {
       )
   })
   
-  output$map_summary <- renderText({
-    data <- visible_data()
+  output$map_summary = renderText({
+    data = visible_data()
     if (nrow(data) == 0) return("No hybrid zones visible")
     
-    line1 <- paste0(nrow(data), " hybrid zones visible")
+    line1 = paste0(nrow(data), " hybrid zones visible")
     
-    tax_counts <- data %>%
+    tax_counts = data %>%
       count(taxon_category_clean) %>%
       arrange(taxon_category_clean)
     
-    line2 <- paste(
+    line2 = paste(
       paste0(
         tax_counts$n, " ",
         tools::toTitleCase(tax_counts$taxon_category_clean)
@@ -455,7 +455,7 @@ server <- function(input, output, session) {
     paste0(line1, "\n", line2)
   })
   
-  output$map <- renderLeaflet({
+  output$map = renderLeaflet({
     leaflet(options = leafletOptions(
       worldCopyJump = FALSE,
       preferCanvas  = TRUE,
@@ -473,7 +473,7 @@ server <- function(input, output, session) {
       )
   })
   
-  highlight_point <- function(row) {
+  highlight_point = function(row) {
     leafletProxy("map") %>%
       clearGroup("highlight") %>%
       addCircleMarkers(
@@ -500,9 +500,9 @@ server <- function(input, output, session) {
   }
   
   observe({
-    data <- filtered_data()
+    data = filtered_data()
     
-    proxy <- leafletProxy("map", data = data) %>%
+    proxy = leafletProxy("map", data = data) %>%
       clearMarkers() %>%
       clearControls() %>%
       clearGroup("highlight")
@@ -516,37 +516,41 @@ server <- function(input, output, session) {
           color  = ~pal(taxon_category_clean),
           fillOpacity = 0.8,
           layerId = ~pt_id,
-          label = ~paste0("<i>", species1_name, "</i> × <i>", species2_name, "</i>") %>% lapply(htmltools::HTML)
+          # 1. Capitalize the first letter of each species name
+          label = ~paste0("<i>", tools::toTitleCase(species1_name), "</i> × <i>", tools::toTitleCase(species2_name), "</i>") %>% 
+            lapply(htmltools::HTML)
         ) %>%
         addLegend(
           "bottomright",
           colors = unname(pal_colors),
-          labels = names(pal_colors),
+          # 2. Capitalize the first letter of the legend labels
+          labels = tools::toTitleCase(names(pal_colors)),
           title  = "Taxon Category",
           opacity = 1
         )
     }
   })
   
-  output$results_list <- renderUI({
-    data <- filtered_data()
-    sel  <- selected_row()
-    sel_id <- if (is.null(sel)) NA_integer_ else sel$id
+  
+  output$results_list = renderUI({
+    data = filtered_data()
+    sel  = selected_row()
+    sel_id = if (is.null(sel)) NA_integer_ else sel$id
     
     if (nrow(data) == 0) {
       return(tags$em("No hybrid zones match the current filters."))
     }
     
     lapply(seq_len(nrow(data)), function(i) {
-      row <- data[i, ]
+      row = data[i, ]
       
-      item_id <- paste0("hz_item_", row$id)
-      classes <- "hz-item"
+      item_id = paste0("hz_item_", row$id)
+      classes = "hz-item"
       if (!is.na(sel_id) && row$id == sel_id) {
-        classes <- paste(classes, "hz-item-selected")
+        classes = paste(classes, "hz-item-selected")
       }
       
-      meta_line <- if (!is.na(row$continent)) {
+      meta_line = if (!is.na(row$continent)) {
         paste(row$taxon_category, "•", row$continent, "•", row$habitat_type)
       } else {
         paste(row$taxon_category, "•", row$habitat_type)
@@ -571,13 +575,13 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$hz_list_click, {
-    pt_id <- input$hz_list_click
+    pt_id = input$hz_list_click
     if (is.null(pt_id)) return()
     
-    data <- filtered_data()
-    row  <- data[data$pt_id == pt_id, ]
+    data = filtered_data()
+    row  = data[data$pt_id == pt_id, ]
     if (nrow(row) == 0) return()
-    row <- row[1, ]
+    row = row[1, ]
     
     selected_row(row)
     highlight_point(row)
@@ -591,13 +595,13 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$map_marker_click, {
-    click <- input$map_marker_click
+    click = input$map_marker_click
     if (is.null(click)) return()
     
-    data <- filtered_data()
-    row  <- data[data$pt_id == click$id, ]
+    data = filtered_data()
+    row  = data[data$pt_id == click$id, ]
     if (nrow(row) == 0) return()
-    row <- row[1, ]
+    row = row[1, ]
     
     selected_row(row)
     highlight_point(row)
@@ -615,15 +619,15 @@ server <- function(input, output, session) {
     )
   })
   
-  output$details_panel <- renderUI({
-    row <- selected_row()
+  output$details_panel = renderUI({
+    row = selected_row()
     
     if (is.null(row)) {
       return(tags$em("Click a hybrid zone in the list or on the map to see details."))
     }
     
-    cont <- ifelse(is.na(row$continent), "None / Open Water", row$continent)
-    bg_color <- paste0(pal(row$taxon_category_clean), "20")
+    cont = ifelse(is.na(row$continent), "None / Open Water", row$continent)
+    bg_color = paste0(pal(row$taxon_category_clean), "20")
     
     div(
       style = paste0(
@@ -736,12 +740,12 @@ server <- function(input, output, session) {
     )
   })
   
-  output$cline_plot <- renderPlot({
+  output$cline_plot = renderPlot({
     
-    row <- selected_row()
+    row = selected_row()
     if (is.null(row)) return(NULL)
     
-    centers <- c(
+    centers = c(
       row$new_pheno_geno_cline_center,
       row$new_genomic_cline_center,
       row$new_mt_cline_center,
@@ -749,7 +753,7 @@ server <- function(input, output, session) {
       row$new_pheno_cline_center
     )
     
-    widths <- c(
+    widths = c(
       row$new_pheno_geno_cline_width,
       row$new_genomic_cline_width,
       row$new_mt_cline_width,
@@ -757,7 +761,7 @@ server <- function(input, output, session) {
       row$new_pheno_cline_width
     )
     
-    width_lower <- c(
+    width_lower = c(
       NA,  # Pheno-Genomic (no CI available)
       NA,  # Genomic (no CI available)
       row$new_mt_width_uncertainty_lower_bound,
@@ -765,7 +769,7 @@ server <- function(input, output, session) {
       row$new_pheno_width_uncertainty_lower_bound
     )
     
-    width_upper <- c(
+    width_upper = c(
       NA,  # Pheno-Genomic
       NA,  # Genomic
       row$new_mt_width_uncertainty_upper_bound,
@@ -773,7 +777,7 @@ server <- function(input, output, session) {
       row$new_pheno_width_uncertainty_upper_bound
     )
     
-    labels <- c(
+    labels = c(
       "Pheno-Genomic",
       "Genomic",
       "mtDNA",
@@ -781,7 +785,7 @@ server <- function(input, output, session) {
       "Phenotype"
     )
     
-    cols <- c(
+    cols = c(
       "#0072B2",  # blue
       "#E69F00",  # orange
       "#009E73",  # bluish green
@@ -789,7 +793,7 @@ server <- function(input, output, session) {
       "#56B4E9"   # light blue
     )
     
-    valid <- !(is.na(centers) | is.na(widths))
+    valid = !(is.na(centers) | is.na(widths))
     
     if (sum(valid) == 0) {
       plot.new()
@@ -797,8 +801,8 @@ server <- function(input, output, session) {
       return()
     }
     
-    xmin <- min(centers[valid]-3*widths[valid], na.rm=TRUE)
-    xmax <- max(centers[valid]+3*widths[valid], na.rm=TRUE)
+    xmin = min(centers[valid]-3*widths[valid], na.rm=TRUE)
+    xmax = max(centers[valid]+3*widths[valid], na.rm=TRUE)
     
     # --- Flat line ends ---
     par(lend = 0)
@@ -828,27 +832,27 @@ server <- function(input, output, session) {
       tck = -0.02    # small tick marks
     )
     
-    offset_step <- 0.06
-    offset_index <- 0
+    offset_step = 0.06
+    offset_index = 0
     
     for (i in seq_along(centers)) {
       
-      c <- centers[i]
-      w <- widths[i]
+      c = centers[i]
+      w = widths[i]
       
       if (is.na(c) || is.na(w)) next
       
-      x <- seq(xmin, xmax, length.out = 200)
-      x_centered <- x - mean(centers[valid])
-      y <- 1/(1 + exp(-4*(x_centered - (c - mean(centers[valid])))/w))
+      x = seq(xmin, xmax, length.out = 200)
+      x_centered = x - mean(centers[valid])
+      y = 1/(1 + exp(-4*(x_centered - (c - mean(centers[valid])))/w))
       
       # --- Shaded 95% CI using your bounds ---
-      w_lower <- width_lower[i]   # e.g., new_mt_width_uncertainty_lower_bound[i]
-      w_upper <- width_upper[i]   # e.g., new_mt_width_uncertainty_upper_bound[i]
+      w_lower = width_lower[i]   # e.g., new_mt_width_uncertainty_lower_bound[i]
+      w_upper = width_upper[i]   # e.g., new_mt_width_uncertainty_upper_bound[i]
       
       if (!is.na(w_lower) && !is.na(w_upper)) {
-        ci_upper <- 1/(1 + exp(-4*(x - c)/w_lower))
-        ci_lower <- 1/(1 + exp(-4*(x - c)/w_upper))
+        ci_upper = 1/(1 + exp(-4*(x - c)/w_lower))
+        ci_lower = 1/(1 + exp(-4*(x - c)/w_upper))
         polygon(
           c(x, rev(x)),
           c(ci_upper, rev(ci_lower)),
@@ -861,11 +865,11 @@ server <- function(input, output, session) {
       lines(x, y, lwd = 7.5, col = cols[i])
       
       # --- Center vertical line (dotted, rectangular ends) ---
-      dash_len <- 0.05
-      gap_len  <- 0.04
-      y_vals <- seq(0, 1, by = dash_len + gap_len)
+      dash_len = 0.05
+      gap_len  = 0.04
+      y_vals = seq(0, 1, by = dash_len + gap_len)
       for (y_start in y_vals) {
-        y_end <- min(y_start + dash_len, 1)
+        y_end = min(y_start + dash_len, 1)
         segments(
           x0 = c, x1 = c,
           y0 = y_start, y1 = y_end,
@@ -876,7 +880,7 @@ server <- function(input, output, session) {
       }
       
       # --- Width line (offset to avoid overlap) ---
-      y_offset <- 0.5 + (offset_index - (sum(valid)-1)/2) * offset_step
+      y_offset = 0.5 + (offset_index - (sum(valid)-1)/2) * offset_step
       segments(
         x0 = c - w/2, x1 = c + w/2,
         y0 = y_offset, y1 = y_offset,
@@ -886,7 +890,7 @@ server <- function(input, output, session) {
       )
       
       # --- End caps for width ---
-      cap_height <- 0.03
+      cap_height = 0.03
       segments(
         x0 = c - w/2, x1 = c - w/2,
         y0 = y_offset - cap_height/2,
@@ -902,7 +906,7 @@ server <- function(input, output, session) {
         lwd = 7.5, lend = 1
       )
       
-      offset_index <- offset_index + 1
+      offset_index = offset_index + 1
     }
     
     legend(
@@ -922,16 +926,16 @@ server <- function(input, output, session) {
   # ============================================================
   #  DOWNLOAD HANDLER (With Dynamic Filename)
   # ============================================================
-  output$download_filtered_data <- downloadHandler(
+  output$download_filtered_data = downloadHandler(
     filename = function() {
       # 1. Collect filter values, replacing "All" with a blank or descriptive term
-      taxon_tag    <- if(input$taxon_filter == "All") "AllTaxa" else input$taxon_filter
-      habitat_tag  <- if(input$habitat_filter == "All") "AllHabitats" else input$habitat_filter
-      region_tag   <- if(input$continent_filter == "All") "Global" else input$continent_filter
+      taxon_tag    = if(input$taxon_filter == "All") "AllTaxa" else input$taxon_filter
+      habitat_tag  = if(input$habitat_filter == "All") "AllHabitats" else input$habitat_filter
+      region_tag   = if(input$continent_filter == "All") "Global" else input$continent_filter
       
       # 2. Clean up names (remove spaces/special chars) to keep the filename tidy
       # e.g., "North America" becomes "NorthAmerica"
-      clean_tag <- function(x) gsub("[^[:alnum:]]", "", x)
+      clean_tag = function(x) gsub("[^[:alnum:]]", "", x)
       
       # 3. Construct the filename
       paste0(
@@ -944,10 +948,10 @@ server <- function(input, output, session) {
       )
     },
     content = function(file) {
-      export_data <- filtered_data()
+      export_data = filtered_data()
       
       # Clean up internal columns and revert the "new_" prefix
-      export_data <- export_data %>%
+      export_data = export_data %>%
         select(-id, -pt_id, -continent, -ends_with("_clean")) %>%
         rename_with(~ str_remove(., "^new_"), starts_with("new_"))
       

@@ -1,0 +1,22 @@
+# --- Secrets and Environment Variables ---
+# NEVER commit these if they contain your real passwords
+.Renviron
+.env
+auth.json
+
+# --- R specific files ---
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+*.Rproj
+
+# --- Database & Data ---
+# If you have your local CSV or SQL backups in the folder
+*.csv
+*.sql
+*.sqlite
+
+# --- System & OS files ---
+.DS_Store
+Thumbs.db

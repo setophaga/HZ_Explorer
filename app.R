@@ -139,26 +139,38 @@ all_species = all_species[all_species != "" & !is.na(all_species)]
 ui = fluidPage(
   tags$head(
     tags$style(HTML("
-      /* Firefox scrollbar support */
-      html {
-        scrollbar-color: #ffd700 #23433a;
-        scrollbar-width: auto;
+      /* Enable custom scrollbars in Firefox / Edge / Chromium */
+      html, body {
+        scrollbar-color: #ffd700 #23433a !important;
+        scrollbar-width: auto !important;
       }
 
-      /* Webkit Custom Gold Scrollbar for main page */
-      ::-webkit-scrollbar {
-        width: 12px;
+      /* Force Webkit/Edge Custom Scrollbar */
+      ::-webkit-scrollbar,
+      html::-webkit-scrollbar,
+      body::-webkit-scrollbar {
+        width: 14px !important;
+        display: block !important;
       }
-      ::-webkit-scrollbar-track {
-        background: #23433a; 
+
+      ::-webkit-scrollbar-track,
+      html::-webkit-scrollbar-track,
+      body::-webkit-scrollbar-track {
+        background: #23433a !important;
       }
-      ::-webkit-scrollbar-thumb {
-        background-color: #ffd700;
-        border-radius: 6px;
-        border: 2px solid #23433a;
+
+      ::-webkit-scrollbar-thumb,
+      html::-webkit-scrollbar-thumb,
+      body::-webkit-scrollbar-thumb {
+        background-color: #ffd700 !important;
+        border-radius: 6px !important;
+        border: 2px solid #23433a !important;
       }
-      ::-webkit-scrollbar-thumb:hover {
-        background-color: #e6c200;
+
+      ::-webkit-scrollbar-thumb:hover,
+      html::-webkit-scrollbar-thumb:hover,
+      body::-webkit-scrollbar-thumb:hover {
+        background-color: #e6c200 !important;
       }
 
       /* Existing Styles */
@@ -261,7 +273,7 @@ server = function(input, output, session) {
   output$secure_ui <- renderUI({
     req(auth())
     
-    div(style = "background-color: #316053; color: black; min-height: 100vh; width: 100%; margin: 0; padding: 20px; box-sizing: border-box; position: absolute; left: 0; top: 0;",
+    div(style = "background-color: #316053; color: black; min-height: 100vh; width: 100%; margin: 0; padding: 20px; box-sizing: border-box; position: absolute; left: 0; top: 0; overflow-y: scroll;",
         tagList(
           titlePanel(h2("Hybrid Zone Explorer", style = "color: #89D9B2; margin-top: 0; font-weight: bold;")),
           
@@ -783,21 +795,6 @@ server = function(input, output, session) {
            x.intersp = 1.2,         
            bty = "n")               
   })
-  
-  # DISABLED FOR NOW:
-  # output$download_filtered_data = downloadHandler(
-  #   filename = function() {
-  #     taxon_tag = if(input$taxon_filter == "All") "AllTaxa" else input$taxon_filter
-  #     region_tag = if(input$continent_filter == "All") "Global" else input$continent_filter
-  #     clean_tag = function(x) gsub("[^[:alnum:]]", "", x)
-  #     paste0("HZ_Export_", clean_tag(taxon_tag), "_", clean_tag(region_tag), "_", Sys.Date(), ".csv")
-  #   },
-  #   content = function(file) {
-  #     req(auth())
-  #     export_data = filtered_data() %>% select(-id, -pt_id, -continent, -ends_with("_clean")) %>% rename_with(~ str_remove(., "^new_"), starts_with("new_"))
-  #     write.csv(export_data, file, row.names = FALSE, na = "na")
-  #   }
-  # )
 }
 
 shinyApp(ui, server)

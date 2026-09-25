@@ -139,6 +139,28 @@ all_species = all_species[all_species != "" & !is.na(all_species)]
 ui = fluidPage(
   tags$head(
     tags$style(HTML("
+      /* Firefox scrollbar support */
+      html {
+        scrollbar-color: #ffd700 #23433a;
+        scrollbar-width: auto;
+      }
+
+      /* Webkit Custom Gold Scrollbar for main page */
+      ::-webkit-scrollbar {
+        width: 12px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #23433a; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: #ffd700;
+        border-radius: 6px;
+        border: 2px solid #23433a;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: #e6c200;
+      }
+
       /* Existing Styles */
       .with-spinner > div { padding-bottom: 0 !important; }
       
@@ -248,8 +270,8 @@ server = function(input, output, session) {
             # --- 1. LEFT COLUMN ---
             column(3,
                    div(class = "sidebar-inputs", 
-                       # REDUCED HEIGHT: Changed from 700px to 550px to align with map and reveal details panel
-                       style = "background-color: #f5f5f5; padding: 15px; border-radius: 8px; border: 2px solid #000000; box-shadow: 0 2px 5px rgba(0,0,0,0.05); height: 550px; display: flex; flex-direction: column; color: black;",
+                       # Height set to 500px to reveal lower panel
+                       style = "background-color: #f5f5f5; padding: 15px; border-radius: 8px; border: 2px solid #000000; box-shadow: 0 2px 5px rgba(0,0,0,0.05); height: 500px; display: flex; flex-direction: column; color: black;",
                        
                        tags$div(style = "text-align:center; margin-bottom:15px;",
                                 tags$img(src = "lab.logo.png", height = "80px")
@@ -288,8 +310,8 @@ server = function(input, output, session) {
                    div(style = "position: relative; border: 2px solid #000000; border-radius: 8px; overflow: hidden; background-color: white;",
                        withSpinner(
                          div(style = "position: relative;",
-                             # REDUCED HEIGHT: Changed from 697px to 500px to match sidebar container height
-                             leafletOutput("map", height = "550px"),
+                             # Height set to 500px to match sidebar container height
+                             leafletOutput("map", height = "500px"),
                              div(id = "map-summary", textOutput("map_summary"))
                          )
                        )
